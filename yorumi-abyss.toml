@@ -2,47 +2,47 @@
 
 [colors]
 cursor = { text = "#060914", cursor = "#BDBFCB" }
-vi_mode_cursor = { text = "#060914", cursor = "#D7E1B7" }
-line_indicator = { foreground = "#BDBFCB", background = "#121520" }
-footer_bar = { foreground = "#BDBFCB", background = "#121520" }
-selection = { text = "#BDBFCB", background = "#343742" }
+vi_mode_cursor = { text = "#060914", cursor = "#7088E5" }
+line_indicator = { foreground = "#C2CAEC", background = "#284572" }
+footer_bar = { foreground = "#C2CAEC", background = "#284572" }
+selection = { text = "#C2CAEC", background = "#284572" }
 
 [colors.primary]
 background = "#060914"
 foreground = "#BDBFCB"
-dim_foreground = "#A7A9B5"
-bright_foreground = "#D7E1B7"
+dim_foreground = "#8E9099"
+bright_foreground = "#F1F1F4"
 
 [colors.search]
-matches = { foreground = "#060914", background = "#D6B476" }
-focused_match = { foreground = "#BDBFCB", background = "#6B5905" }
+matches = { foreground = "#060914", background = "#CEA455" }
+focused_match = { foreground = "#E5E8ED", background = "#4E3E0A" }
 
 [colors.normal]
 black = "#060914"
-red = "#C65E53"
-green = "#8CB167"
-blue = "#597BC0"
-yellow = "#C39D55"
+red = "#D15547"
+green = "#8ab364"
+blue = "#5E75B9"
+yellow = "#CEA455"
 magenta = "#BB5D7D"
-cyan = "#67BBB9"
-white = "#BDBFCB"
+cyan = "#59c9c7"
+white = "#E5E8ED"
 
 [colors.bright]
-black = "#1D202B"
-red = "#F47571"
-green = "#A9D07C"
-blue = "#798DDC"
-yellow = "#E1C084"
-magenta = "#E184AF"
-cyan = "#85E0CB"
-white = "#D7E1B7"
+black = "#4D4F58"
+red = "#F35B4B"
+green = "#AADB71"
+blue = "#7088E5"
+yellow = "#e3cb52"
+magenta = "#DF7CAA"
+cyan = "#6DDBDD"
+white = "#F1F1F4"
 
 [colors.dim]
-black = "#0E0D17"
-red = "#4E0E0E"
-green = "#1C4642"
-blue = "#0D2C4E"
-yellow = "#605006"
-magenta = "#4C1036"
-cyan = "#104351"
-white = "#878996"
+black = "#191B25"
+red = "#601614"
+green = "#344E34"
+blue = "#1B3960"
+yellow = "#72550A"
+magenta = "#682448"
+cyan = "#076369"
+white = "#BDBFCB"
