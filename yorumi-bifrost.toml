@@ -1,0 +1,49 @@
+# yorumi bifrost — light
+# generated from primitives.json + ansi-themes.json; edit the generator, not this file
+
+[colors]
+cursor = { text = "#ebedf1", cursor = "#191b25" }
+vi_mode_cursor = { text = "#ebedf1", cursor = "#afb9df" }
+line_indicator = { foreground = "#191b25", background = "#94969d" }
+footer_bar = { foreground = "#191b25", background = "#94969d" }
+selection = { text = "#191b25", background = "#afb9df" }
+
+[colors.primary]
+background = "#ebedf1"
+foreground = "#191b25"
+dim_foreground = "#4d4f58"
+bright_foreground = "#191b25"
+
+[colors.search]
+matches = { foreground = "#ebedf1", background = "#4e3e0a" }
+focused_match = { foreground = "#ebedf1", background = "#9d672f" }
+
+[colors.normal]
+black = "#191b25"
+red = "#4e0e0e"
+green = "#213828"
+yellow = "#4e3e0a"
+blue = "#0d2c4e"
+magenta = "#4c1036"
+cyan = "#054951"
+white = "#a8aab5"
+
+[colors.bright]
+black = "#4d4f58"
+red = "#913b3b"
+green = "#667c4b"
+yellow = "#9d672f"
+blue = "#42608a"
+magenta = "#8d3f5a"
+cyan = "#49837e"
+white = "#ebedf1"
+
+[colors.dim]
+black = "#787a81"
+red = "#957274"
+green = "#7c8982"
+yellow = "#958d72"
+blue = "#718397"
+magenta = "#94738a"
+cyan = "#6d9399"
+white = "#c6c8d0"

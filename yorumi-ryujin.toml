@@ -1,0 +1,49 @@
+# yorumi ryujin — dark
+# generated from primitives.json + ansi-themes.json; edit the generator, not this file
+
+[colors]
+cursor = { text = "#0b0b19", cursor = "#afb9df" }
+vi_mode_cursor = { text = "#0b0b19", cursor = "#76b0ff" }
+line_indicator = { foreground = "#afb9df", background = "#293a57" }
+footer_bar = { foreground = "#afb9df", background = "#293a57" }
+selection = { text = "#0b0b19", background = "#76b0ff" }
+
+[colors.primary]
+background = "#0b0b19"
+foreground = "#afb9df"
+dim_foreground = "#bdbfcb"
+bright_foreground = "#afb9df"
+
+[colors.search]
+matches = { foreground = "#0b0b19", background = "#cdb68c" }
+focused_match = { foreground = "#0b0b19", background = "#ffb86b" }
+
+[colors.normal]
+black = "#0b0b19"
+red = "#de8280"
+green = "#a1b38c"
+yellow = "#cdb68c"
+blue = "#7f8cbf"
+magenta = "#c9809f"
+cyan = "#96c3b8"
+white = "#bdbfcb"
+
+[colors.bright]
+black = "#42608a"
+red = "#e2aeac"
+green = "#5be3b4"
+yellow = "#ffb86b"
+blue = "#76b0ff"
+magenta = "#df8eff"
+cyan = "#c6dfec"
+white = "#afb9df"
+
+[colors.dim]
+black = "#0b0b19"
+red = "#7f4c52"
+green = "#5e6758"
+yellow = "#766958"
+blue = "#4b5274"
+magenta = "#744b63"
+cyan = "#577070"
+white = "#6d6e7b"

@@ -1,0 +1,49 @@
+# yorumi kraken — dark
+# generated from primitives.json + ansi-themes.json; edit the generator, not this file
+
+[colors]
+cursor = { text = "#0e0d17", cursor = "#bfafdf" }
+vi_mode_cursor = { text = "#0e0d17", cursor = "#df8eff" }
+line_indicator = { foreground = "#bfafdf", background = "#3c2c54" }
+footer_bar = { foreground = "#bfafdf", background = "#3c2c54" }
+selection = { text = "#0e0d17", background = "#df8eff" }
+
+[colors.primary]
+background = "#0e0d17"
+foreground = "#bfafdf"
+dim_foreground = "#bdbfcb"
+bright_foreground = "#bfafdf"
+
+[colors.search]
+matches = { foreground = "#0e0d17", background = "#ba9a5e" }
+focused_match = { foreground = "#0e0d17", background = "#ffb86b" }
+
+[colors.normal]
+black = "#0e0d17"
+red = "#c65e53"
+green = "#80aa6e"
+yellow = "#ba9a5e"
+blue = "#597bc0"
+magenta = "#b4647f"
+cyan = "#5caeac"
+white = "#bdbfcb"
+
+[colors.bright]
+black = "#614686"
+red = "#e2aeac"
+green = "#5be3b4"
+yellow = "#ffb86b"
+blue = "#76b0ff"
+magenta = "#df8eff"
+cyan = "#c6dfec"
+white = "#bfafdf"
+
+[colors.dim]
+black = "#0e0d17"
+red = "#733a38"
+green = "#4d6347"
+yellow = "#6d5b3e"
+blue = "#374a74"
+magenta = "#693d50"
+cyan = "#396669"
+white = "#6e6f7a"
