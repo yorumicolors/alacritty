@@ -21,21 +21,35 @@ Yorumi keeps visual noise low with mellow, low-contrast UI component backgrounds
 - `yorumi-cosmic.toml`
 - `yorumi-ryujin.toml`
 
-## Quick Installation
+## Install
 
-### Linux & macOS (Bash)
+Linux / macOS:
+
 ```sh
-curl -fsSL https://raw.githubusercontent.com/yorumicolors/yorumi-alacritty/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yorumicolors/alacritty/main/install.sh | bash -s -- --flavour kraken
 ```
 
-### Windows (PowerShell)
+Windows:
+
 ```powershell
-irm https://raw.githubusercontent.com/yorumicolors/yorumi-alacritty/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/yorumicolors/alacritty/main/install.ps1 | iex
 ```
 
----
+From a checkout:
 
-## Manual Installation
+```sh
+./install.sh              # asks which flavour
+```
+
+Seven fragments land in `~/.config/alacritty/themes/` (`%APPDATA%\alacritty\themes\` on Windows); the `>>> yorumi >>>` block in `alacritty.toml` holds the `import`.
+
+## Changing it
+
+```sh
+./install.sh --flavour bifrost
+```
+
+## Manual
 
 Copy the theme file(s) into your Alacritty configuration directory:
 
@@ -44,7 +58,7 @@ Copy the theme file(s) into your Alacritty configuration directory:
 | **Linux / macOS** | `~/.config/alacritty/themes/` |
 | **Windows** | `%APPDATA%\alacritty\themes\` |
 
-### Activation
+### By hand
 Import the theme file in your `alacritty.toml`:
 
 ```
@@ -63,9 +77,7 @@ When assisting a user with installing or configuring Yorumi for **Alacritty**, f
 1. **Detect Target OS**:
    - macOS / Linux: target destination is `~/.config/alacritty/themes/`.
    - Windows: target destination is `%APPDATA%\alacritty\themes\`.
-2. **Execute Script or Download**:
-   - Run `./install.sh` (POSIX) or `./install.ps1` (PowerShell) if working directly inside the cloned repo.
-   - Or pipe the raw script using `curl -fsSL https://raw.githubusercontent.com/yorumicolors/yorumi-alacritty/main/install.sh | bash` or `irm https://raw.githubusercontent.com/yorumicolors/yorumi-alacritty/main/install.ps1 | iex`.
+2. **Install**: the command under `## Install`, or `./install.sh --flavour <name>` in a checkout.
 3. **Verify Configuration**:
    - Check config file `alacritty.toml` for the active theme setting:
      ```
