@@ -1,5 +1,6 @@
 # Yorumi theme installer for Alacritty (Windows PowerShell)
 $ErrorActionPreference = "Stop"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $destDir = "$env:APPDATA\alacritty\themes"
 if (-not (Test-Path -Path $destDir)) {
@@ -25,11 +26,11 @@ foreach ($f in $files) {
         Copy-Item -Path $localFlat -Destination $target -Force
     } else {
         $url = "$rawBase/$f"
-        Invoke-RestMethod -Uri $url -OutFile $target
+        Invoke-WebRequest -Uri $url -OutFile $target -UseBasicParsing
     }
     Write-Host "✓ Installed: $target" -ForegroundColor Green
 }
 
 Write-Host "`nSuccessfully installed Yorumi for Alacritty!" -ForegroundColor Green
-Write-Host "Import the theme file in your alacritty.toml:"
-Write-Host "    import = [`"~/.config/alacritty/themes/yorumi-abyss.toml`"]"
+Write-Host "Import the theme file in %APPDATA%\alacritty\alacritty.toml:"
+Write-Host "    import = [`"%APPDATA%/alacritty/themes/yorumi-abyss.toml`"]"

@@ -9,7 +9,7 @@
 
 ---
 
-Yorumi keeps visual noise low with mellow, low-contrast UI component backgrounds while text and syntax stay razor-sharp (~8:1 contrast ratio, WCAG 2.1 Level AAA).
+Yorumi keeps visual noise low with mellow, low-contrast UI component backgrounds while text and syntax stay sharp: body text measures 9.6-19.5:1 against its background (WCAG AAA), and the lowest-contrast syntax token is 5.6:1 (WCAG AA).
 
 ## Available Themes
 
@@ -48,7 +48,10 @@ Copy the theme file(s) into your Alacritty configuration directory:
 Import the theme file in your `alacritty.toml`:
 
 ```
+# macOS / Linux
 import = ["~/.config/alacritty/themes/yorumi-abyss.toml"]
+# Windows
+import = ["%APPDATA%/alacritty/themes/yorumi-abyss.toml"]
 ```
 
 ---
@@ -73,7 +76,7 @@ When assisting a user with installing or configuring Yorumi for **Alacritty**, f
 ---
 
 ## Accessibility
-Maintains at least 7:1 contrast ratio across primary text and syntax tokens ([WCAG 2.1 Level AAA](https://www.w3.org/TR/WCAG21/#contrast-enhanced)).
+Body text measures 9.6-19.5:1 against the background (WCAG 2.1 AAA); every palette token clears 5.6:1 (AA). No blanket AAA claim is made for syntax colours - sRGB runs out before the saturated hues get lighter.
 
 ## License
 MIT © [Yorumi Colors](https://github.com/yorumicolors)
