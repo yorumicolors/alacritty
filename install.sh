@@ -97,15 +97,22 @@ cat << 'INFO'
 
 Successfully installed the Yorumi files for Alacritty.
 
-Activate it — the block below is rewritten by every run, so switching flavour is
-just `./install.sh --flavour <name>`:
+Activate it — one marked entry inside the `import` array of `[general]`. Any
+imports already there stay; every run rewrites only this entry:
 
-    # >>> yorumi >>>
-    import = ["~/.config/alacritty/themes/yorumi-abyss.toml"]
-    # <<< yorumi <<<
+    [general]
+    import = [
+        # >>> yorumi >>>
+        "~/.config/alacritty/themes/yorumi-abyss.toml",
+        # <<< yorumi <<<
+    ]
 INFO
 
-# ── activation: one marked block, replaced whole ───────────────────────────
+# ── activation: the key has a home, and the end of the file is not it ─────
+# `import` is an option of the `general` table. Appending it to a config whose
+# last table is `[env]` makes it an env var — "invalid type: sequence, expected
+# a string" — and a second `import` inside `[general]` is a duplicate key. So:
+# add our file to the import array that is already there, or create one.
 BEGIN="# >>> yorumi >>>"
 END="# <<< yorumi <<<"
 
@@ -125,20 +132,108 @@ write_block() {
   work=$(mktemp -d)
   trap 'rm -rf "$work"' EXIT
 
-  cat > "$work/block" <<YORUMI_BLOCK
-$BEGIN
-import = ["$DEST_DIR/yorumi-$FLAVOUR.toml"]
-$END
-YORUMI_BLOCK
+  printf '"%s/yorumi-%s.toml",\n' "$DEST_DIR" "$FLAVOUR" > "$work/body"
 
-  if grep -q -x -F -e "$BEGIN" "$CONFIG"; then
-    awk -v b="$BEGIN" -v e="$END" -v bf="$work/block" '
-      $0 == b { if (!done) { while ((getline line < bf) > 0) print line; close(bf); done = 1 } inside = 1; next }
-      $0 == e { inside = 0; next }
-      inside == 0 { print }' "$CONFIG" > "$work/out"
-  else
-    { cat "$CONFIG"; [ -s "$CONFIG" ] && printf '\n'; cat "$work/block"; } > "$work/out"
-  fi
+  awk -v b="$BEGIN" -v e="$END" -v bf="$work/body" '
+    { L[NR] = $0 }
+    function trim(x) { sub(/^[ \t]+/, "", x); sub(/[ \t]+$/, "", x); return x }
+    END {
+      n = NR
+
+      # an existing region is replaced where it sits
+      for (i = 1; i <= n; i++) if (trim(L[i]) == b) { at = i; break }
+      if (at) {
+        ind = L[at]; sub(/[^ \t].*$/, "", ind)
+        for (i = 1; i < at; i++) print L[i]
+        print ind b
+        while ((getline line < bf) > 0) print ind line
+        close(bf); print ind e
+        for (i = at + 1; i <= n && trim(L[i]) != e; i++) ;
+        for (i = i + 1; i <= n; i++) print L[i]
+        exit
+      }
+
+      # where does `import` belong: [general], or the root of a legacy file
+      gs = 0
+      for (i = 1; i <= n; i++) if (L[i] ~ /^[ \t]*\[general\][ \t]*(#.*)?$/) { gs = i; break }
+      ks = 0
+      if (gs) {
+        ge = n
+        for (i = gs + 1; i <= n; i++) if (L[i] ~ /^[ \t]*\[/) { ge = i - 1; break }
+        for (i = gs + 1; i <= ge; i++) if (L[i] ~ /^[ \t]*import[ \t]*=/) { ks = i; break }
+      } else {
+        for (i = 1; i <= n; i++) {
+          if (L[i] ~ /^[ \t]*\[/) break
+          if (L[i] ~ /^[ \t]*import[ \t]*=/) { ks = i; break }
+        }
+      }
+
+      if (!ks) {
+        if (gs) {
+          for (i = 1; i <= gs; i++) print L[i]
+          print "import = ["
+          print "    " b
+          while ((getline line < bf) > 0) print "    " line
+          close(bf); print "    " e
+          print "]"
+          for (i = gs + 1; i <= n; i++) print L[i]
+        } else {
+          print "[general]"
+          print "import = ["
+          print "    " b
+          while ((getline line < bf) > 0) print "    " line
+          close(bf); print "    " e
+          print "]"
+          if (n) print ""
+          for (i = 1; i <= n; i++) print L[i]
+        }
+        exit
+      }
+
+      open = index(L[ks], "[")
+      if (!open) {                       # `import = "one.toml"`: an array now
+        v = L[ks]; sub(/^[^=]*=[ \t]*/, "", v); gsub(/^"|"[ \t]*$/, "", v)
+        for (i = 1; i < ks; i++) print L[i]
+        print "import = ["
+        print "    \"" v "\","
+        print "    " b
+        while ((getline line < bf) > 0) print "    " line
+        close(bf); print "    " e
+        print "]"
+        for (i = ks + 1; i <= n; i++) print L[i]
+        exit
+      }
+      rest = substr(L[ks], open + 1)
+      if (index(rest, "]")) {            # `import = ["a.toml"]`: one line
+        inner = substr(rest, 1, index(rest, "]") - 1)
+        for (i = 1; i < ks; i++) print L[i]
+        print "import = ["
+        m = split(inner, p, ",")
+        for (j = 1; j <= m; j++) { el = trim(p[j]); if (el != "") print "    " el "," }
+        print "    " b
+        while ((getline line < bf) > 0) print "    " line
+        close(bf); print "    " e
+        print "]"
+        for (i = ks + 1; i <= n; i++) print L[i]
+        exit
+      }
+      depth = 0; cl = 0                # a multi-line array: add before its `]`
+      for (i = ks; i <= n; i++) {
+        s = L[i]
+        for (k = 1; k <= length(s); k++) {
+          c = substr(s, k, 1)
+          if (c == "[") depth++
+          else if (c == "]") depth--
+        }
+        if (depth <= 0) { cl = i; break }
+      }
+      for (i = 1; i < cl; i++) print L[i]
+      print "    " b
+      while ((getline line < bf) > 0) print "    " line
+      close(bf); print "    " e
+      for (i = cl; i <= n; i++) print L[i]
+    }
+  ' "$CONFIG" > "$work/out"
 
   if ! cmp -s "$CONFIG" "$work/out"; then
     [ -e "$CONFIG.yorumi-backup" ] || cp "$CONFIG" "$CONFIG.yorumi-backup"
