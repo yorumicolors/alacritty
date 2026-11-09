@@ -3,19 +3,18 @@ $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $destDir = "$env:APPDATA\alacritty\themes"
-$rawBase = "https://raw.githubusercontent.com/yorumicolors/yorumi-alacritty/main"
+$rawBase = "https://raw.githubusercontent.com/yorumicolors/alacritty/main"
 $files = @("yorumi-ether.toml", "yorumi-abyss.toml", "yorumi-bifrost.toml", "yorumi-kraken.toml", "yorumi-kabocha.toml", "yorumi-cosmic.toml", "yorumi-ryujin.toml")
 
 # download beside the target and move it in: a failed fetch leaves nothing behind
 function Save-One([string] $name, [string] $target) {
+    $url = "$rawBase/$name"
     $part = "$target.part.$PID"
     try {
-        Invoke-WebRequest -Uri "$rawBase/$name" -OutFile $part -UseBasicParsing
+        Invoke-WebRequest -Uri $url -OutFile $part -UseBasicParsing
     } catch {
         Remove-Item -LiteralPath $part -ErrorAction SilentlyContinue
-        Write-Host "yorumi: could not download $name from $rawBase" -ForegroundColor Red
-        Write-Host "yorumi: if that repository is not public yet, clone it and run this script from the checkout." -ForegroundColor Red
-        exit 3
+        throw "yorumi: download failed for $url (target $target): $($_.Exception.Message)"
     }
     Move-Item -LiteralPath $part -Destination $target -Force
 }
@@ -41,17 +40,26 @@ foreach ($f in $files) {
     } else {
         Save-One $f $target
     }
-    Write-Host "✓ Installed: $target" -ForegroundColor Green
+    Write-Host "Installed: $target" -ForegroundColor Green
 }
 
 Write-Host "`nSuccessfully installed Yorumi for Alacritty!" -ForegroundColor Green
-Write-Host "Add one marked entry to the import array of the [general] table in"
-Write-Host "%APPDATA%\alacritty\alacritty.toml - not at the top of the file and not"
-Write-Host "under another table, where alacritty would read it as an option of that one:"
+# %APPDATA% is not expanded in a TOML string: print the resolved paths, with
+# backslashes escaped the way a TOML basic string needs them
+$configPath = Join-Path (Split-Path $destDir -Parent) 'alacritty.toml'
+if (Test-Path -LiteralPath $configPath) {
+    $configPath = (Resolve-Path -LiteralPath $configPath).Path
+}
+$themePath = (Join-Path $destDir 'yorumi-ether.toml') -replace '\\', '\\'
+Write-Host "No import was added. Add one marked entry to the import array of the [general]"
+Write-Host "table in $configPath - not at the top of the file and not under another table,"
+Write-Host "where alacritty would read it as an option of that one:"
 Write-Host ""
 Write-Host "    [general]"
 Write-Host "    import = ["
 Write-Host "        # >>> yorumi >>>"
-Write-Host "        `"%APPDATA%/alacritty/themes/yorumi-abyss.toml`","
+Write-Host "        `"$themePath`","
 Write-Host "        # <<< yorumi <<<"
 Write-Host "    ]"
+Write-Host ""
+Write-Host "That names yorumi-ether.toml; the seven files are installed, so any of them works."
