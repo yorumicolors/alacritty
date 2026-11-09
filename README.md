@@ -41,6 +41,9 @@ Without `--flavour` it asks; to skip the question:
 curl -fsSL https://raw.githubusercontent.com/yorumicolors/alacritty/main/install.sh | bash -s -- --flavour kraken
 ```
 
+`--config <path>` targets another `alacritty.toml`; `--no-activate` installs the seven files and
+leaves every config alone.
+
 Seven fragments land in `~/.config/alacritty/themes/` (`%APPDATA%\alacritty\themes\` on Windows); the `>>> yorumi >>>` block in `alacritty.toml` holds the `import`.
 
 ## Changing flavour

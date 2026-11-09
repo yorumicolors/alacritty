@@ -8,6 +8,15 @@ FLAVOURS="ether abyss bifrost kraken kabocha cosmic ryujin"
 CONFIG=""
 ACTIVATE=1
 
+die() { echo "yorumi: $*" >&2; exit 1; }
+
+# replace $1 with $2 atomically, keeping the original file mode
+commit() {
+  local tmp="$1.yorumi-tmp.$$"
+  if [ -e "$1" ]; then cp -p "$1" "$tmp"; else : > "$tmp"; fi
+  if cat "$2" > "$tmp"; then mv "$tmp" "$1"; else rm -f "$tmp"; return 1; fi
+}
+
 # No default flavour. Ask, or fail where nobody can answer.
 ask_flavour() {
   # a real open, not a -r test: /dev/tty exists even when nothing is attached
@@ -46,8 +55,12 @@ DEFAULT_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/alacritty/alacritty.toml"
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --flavour|-f)  FLAVOUR="${2:-}"; shift 2 ;;
-    --config|-c)   CONFIG="${2:-}";  shift 2 ;;
+    --flavour|-f)
+      [ -n "${2:-}" ] || { echo "--flavour needs a flavour name. One of: $FLAVOURS" >&2; exit 2; }
+      FLAVOUR="$2"; shift 2 ;;
+    --config|-c)
+      [ -n "${2:-}" ] || { echo "--config needs a path" >&2; exit 2; }
+      CONFIG="$2"; shift 2 ;;
     --no-activate) ACTIVATE=0; shift ;;
     -h|--help)
       echo "usage: ./install.sh [--flavour <name>] [--config <path>] [--no-activate]"
@@ -88,42 +101,49 @@ for f in "${FILES[@]}"; do
   elif [[ -n "$SCRIPT_DIR" && -f "$SCRIPT_DIR/$basename_f" ]]; then
     cp "$SCRIPT_DIR/$basename_f" "$target"
   else
-    curl -fsSL "$RAW_BASE/$f" -o "$target"
+    part="$target.part.$$"
+    if ! curl -fsSL "$RAW_BASE/$f" -o "$part"; then
+      rm -f "$part"
+      echo "yorumi: could not download $f from $RAW_BASE" >&2
+      echo "yorumi: if that repository is not public yet, clone it and run ./install.sh from the checkout." >&2
+      exit 3
+    fi
+    mv "$part" "$target"
   fi
   echo "✓ Installed: $target"
 done
-
-cat << 'INFO'
-
-Successfully installed the Yorumi files for Alacritty.
-
-Activate it — one marked entry inside the `import` array of `[general]`. Any
-imports already there stay; every run rewrites only this entry:
-
-    [general]
-    import = [
-        # >>> yorumi >>>
-        "~/.config/alacritty/themes/yorumi-abyss.toml",
-        # <<< yorumi <<<
-    ]
-INFO
 
 # ── activation: the key has a home, and the end of the file is not it ─────
 # `import` is an option of the `general` table. Appending it to a config whose
 # last table is `[env]` makes it an env var — "invalid type: sequence, expected
 # a string" — and a second `import` inside `[general]` is a duplicate key. So:
 # add our file to the import array that is already there, or create one.
+#
+# A config with no `[general]` table gets one appended at the end of the file,
+# never at the top: a `[general]` header above the user's root-level keys would
+# re-parent them into it (`colors.primary.background = …` becomes
+# `general.colors.primary.background`, which alacritty ignores), and nothing
+# follows an appended table, so nothing can be re-parented.
 BEGIN="# >>> yorumi >>>"
 END="# <<< yorumi <<<"
 
 write_block() {
   CONFIG="${CONFIG:-$DEFAULT_CONFIG}"
-  mkdir -p "$(dirname "$CONFIG")"
+  mkdir -p "$(dirname "$CONFIG")" || die "cannot create $(dirname "$CONFIG")"
   [ -e "$CONFIG" ] || : > "$CONFIG"
 
-  begins=$(grep -c -x -F -e "$BEGIN" "$CONFIG" || true)
-  ends=$(grep -c -x -F -e "$END" "$CONFIG" || true)
-  if [ "$begins" != "$ends" ]; then
+  counts=$(awk -v b="$BEGIN" -v e="$END" '
+    function trim(x) { sub(/^[ \t]+/, "", x); sub(/[ \t]+$/, "", x); return x }
+    { t = trim($0)
+      if (t == b) { nb++; depth++ }
+      else if (t == e) { ne++; if (depth > 0) depth--; else bad = 1 }
+    }
+    END { printf "%d %d %d\n", nb + 0, ne + 0, bad + 0 }' "$CONFIG")
+  begins=${counts%% *}
+  rest=${counts#* }
+  ends=${rest% *}
+  order=${rest#* }
+  if [ "$begins" != "$ends" ] || [ "$order" != 0 ]; then
     echo "yorumi: $CONFIG has $begins '$BEGIN' and $ends '$END' markers." >&2
     echo "yorumi: the config was not touched; fix or delete those lines, then run this again." >&2
     exit 1
@@ -140,22 +160,25 @@ write_block() {
     END {
       n = NR
 
-      # an existing region is replaced where it sits
-      for (i = 1; i <= n; i++) if (trim(L[i]) == b) { at = i; break }
-      if (at) {
-        ind = L[at]; sub(/[^ \t].*$/, "", ind)
-        for (i = 1; i < at; i++) print L[i]
-        print ind b
-        while ((getline line < bf) > 0) print ind line
-        close(bf); print ind e
-        for (i = at + 1; i <= n && trim(L[i]) != e; i++) ;
-        for (i = i + 1; i <= n; i++) print L[i]
-        exit
+      # our entry is removed wherever it sits; the branches below add it back
+      # as the LAST element of the import array, so it cannot be shadowed by a
+      # sibling import and a second copy cannot survive
+      k = 0; skip = 0; skipblank = 0
+      for (i = 1; i <= n; i++) {
+        t = trim(L[i])
+        if (t == b) { skip = 1; continue }
+        if (skip && t == e) { skip = 0; skipblank = 1; continue }
+        if (skip) continue
+        if (skipblank && t == "") { skipblank = 0; continue }
+        skipblank = 0
+        k++; K[k] = L[i]
       }
+      n = k
+      for (i = 1; i <= k; i++) L[i] = K[i]
 
       # where does `import` belong: [general], or the root of a legacy file
       gs = 0
-      for (i = 1; i <= n; i++) if (L[i] ~ /^[ \t]*\[general\][ \t]*(#.*)?$/) { gs = i; break }
+      for (i = 1; i <= n; i++) if (L[i] ~ /^[ \t]*\[[ \t]*[\047"]?general[\047"]?[ \t]*\][ \t]*(#.*)?$/) { gs = i; break }
       ks = 0
       if (gs) {
         ge = n
@@ -178,14 +201,14 @@ write_block() {
           print "]"
           for (i = gs + 1; i <= n; i++) print L[i]
         } else {
+          for (i = 1; i <= n; i++) print L[i]
+          if (n) print ""
           print "[general]"
           print "import = ["
           print "    " b
           while ((getline line < bf) > 0) print "    " line
           close(bf); print "    " e
           print "]"
-          if (n) print ""
-          for (i = 1; i <= n; i++) print L[i]
         }
         exit
       }
@@ -236,8 +259,8 @@ write_block() {
   ' "$CONFIG" > "$work/out"
 
   if ! cmp -s "$CONFIG" "$work/out"; then
-    [ -e "$CONFIG.yorumi-backup" ] || cp "$CONFIG" "$CONFIG.yorumi-backup"
-    cp "$work/out" "$CONFIG"
+    [ -e "$CONFIG.yorumi-backup" ] || [ ! -s "$CONFIG" ] || cp "$CONFIG" "$CONFIG.yorumi-backup"
+    commit "$CONFIG" "$work/out"
     echo "✓ Block written to $CONFIG ($FLAVOUR)"
   else
     echo "✓ Block already current in $CONFIG ($FLAVOUR)"
@@ -246,6 +269,21 @@ write_block() {
 
 if [ "$ACTIVATE" -eq 1 ]; then
   write_block
+  cat <<INFO
+
+Successfully installed the Yorumi files for Alacritty.
+
+The palette is active through one marked entry in the \`import\` array of
+\`[general]\` inside $CONFIG. Any imports already there stay; every run
+rewrites only this entry:
+
+    [general]
+    import = [
+        # >>> yorumi >>>
+        "$DEST_DIR/yorumi-$FLAVOUR.toml",
+        # <<< yorumi <<<
+    ]
+INFO
 else
   echo "• Activation skipped (--no-activate); the files are installed."
 fi
